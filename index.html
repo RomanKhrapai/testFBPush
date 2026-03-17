@@ -193,24 +193,28 @@
             }
 
             function addMessageToUI(payload) {
+                console.log("UI: Намагаюсь додати повідомлення", payload); // Для дебагу
+
                 if (document.querySelector(".empty-state")) {
                     messagesList.innerHTML = "";
                 }
 
                 const now = new Date().toLocaleTimeString();
-                const notification = payload.notification || {
-                    title: "Без заголовка",
-                    body: "Лише дані (Data message)",
-                };
+
+                const notification = payload.notification ||
+                    payload.data || {
+                        title: "Повідомлення без заголовка",
+                        body: JSON.stringify(payload),
+                    };
 
                 const msgDiv = document.createElement("div");
                 msgDiv.className = "message-item";
                 msgDiv.innerHTML = `
-                    <div class="message-time">${now}</div>
-                    <div class="message-title">${notification.title}</div>
-                    <div class="message-body">${notification.body}</div>
-                `;
-                messagesList.prepend(msgDiv); // Нові повідомлення зверху
+        <div class="message-time">${now}</div>
+        <div class="message-title">${notification.title || "Data message"}</div>
+        <div class="message-body">${notification.body || "Вміст відсутній"}</div>
+    `;
+                messagesList.prepend(msgDiv);
             }
 
             window.onload = () => {
@@ -227,6 +231,7 @@
                 console.log("Отримано через BroadcastChannel:", event.data);
                 addMessageToUI(event.data);
             };
+            channel.onmessageerror = (e) => console.error("Помилка каналу:", e);
 
             async function startFirebase() {
                 const config = {};
