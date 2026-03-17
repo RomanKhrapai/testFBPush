@@ -221,6 +221,13 @@
                 updatePermissionIndicator();
             };
 
+            const channel = new BroadcastChannel("fcm_notifications");
+
+            channel.onmessage = (event) => {
+                console.log("Отримано через BroadcastChannel:", event.data);
+                addMessageToUI(event.data);
+            };
+
             async function startFirebase() {
                 const config = {};
                 fields.forEach((f) => {
