@@ -221,7 +221,6 @@
 
             const channel = new BroadcastChannel("fcm_notifications");
             channel.onmessage = (event) => {
-                console.log("Отримано через BroadcastChannel:", event.data);
                 addMessageToUI(event.data);
             };
 
@@ -264,13 +263,6 @@
 
                     onMessage(messaging, (payload) => {
                         console.log("Message received: ", payload);
-                        addMessageToUI(payload);
-                    });
-                    onMessage(messaging, (payload) => {
-                        console.log(
-                            "Отримано через Firebase SDK (Foreground):",
-                            payload,
-                        );
                         addMessageToUI(payload);
                     });
                 } catch (error) {
