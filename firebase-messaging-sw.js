@@ -1,22 +1,30 @@
 const channel = new BroadcastChannel('fcm_notifications');
 
 self.addEventListener("push", (event) => {
-    let data = {};
+    console.log("SW: Отримано Push-івент");
+    
+    let payload;
     try {
-        data = event.data.json();
+        payload = event.data.json();
     } catch (e) {
-        data = { notification: { title: "Тестовий пуш", body: event.data.text() } };
+        payload = { notification: { title: "Raw Data", body: event.data.text() } };
     }
 
-    console.log("SW: Отримано push", data);
+    // Відправляємо в канал
+    channel.postMessage(payload);
 
-    channel.postMessage(data);
-
-    const title = data.notification?.title || "Нове повідомлення";
+    // Візуальне сповіщення
+    const title = payload.notification?.title || "Нове сповіщення";
     const options = {
-        body: data.notification?.body || "",
-        icon: "/icon.png",
+        body: payload.notification?.body || "",
+        data: payload // зберігаємо всередині нативного пуша
     };
 
     event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Додатково: обробка кліку на пуш
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    // При кліку можна фокусувати вікно
 });

@@ -193,29 +193,37 @@
             }
 
             function addMessageToUI(payload) {
-                console.log("UI: Намагаюсь додати повідомлення", payload); // Для дебагу
+                console.log("UI: Додаю на екран ->", payload);
 
-                if (document.querySelector(".empty-state")) {
-                    messagesList.innerHTML = "";
-                }
+                const emptyState = document.querySelector(".empty-state");
+                if (emptyState) emptyState.remove();
 
                 const now = new Date().toLocaleTimeString();
 
-                const notification = payload.notification ||
-                    payload.data || {
-                        title: "Повідомлення без заголовка",
-                        body: JSON.stringify(payload),
-                    };
+                const title =
+                    payload.notification?.title ||
+                    payload.data?.title ||
+                    "Без заголовка";
+                const body =
+                    payload.notification?.body ||
+                    payload.data?.body ||
+                    "Без тексту";
 
                 const msgDiv = document.createElement("div");
                 msgDiv.className = "message-item";
                 msgDiv.innerHTML = `
         <div class="message-time">${now}</div>
-        <div class="message-title">${notification.title || "Data message"}</div>
-        <div class="message-body">${notification.body || "Вміст відсутній"}</div>
+        <div class="message-title">${title}</div>
+        <div class="message-body">${body}</div>
     `;
                 messagesList.prepend(msgDiv);
             }
+
+            const channel = new BroadcastChannel("fcm_notifications");
+            channel.onmessage = (event) => {
+                console.log("Отримано через BroadcastChannel:", event.data);
+                addMessageToUI(event.data);
+            };
 
             window.onload = () => {
                 fields.forEach((f) => {
@@ -224,14 +232,6 @@
                 });
                 updatePermissionIndicator();
             };
-
-            const channel = new BroadcastChannel("fcm_notifications");
-
-            channel.onmessage = (event) => {
-                console.log("Отримано через BroadcastChannel:", event.data);
-                addMessageToUI(event.data);
-            };
-            channel.onmessageerror = (e) => console.error("Помилка каналу:", e);
 
             async function startFirebase() {
                 const config = {};
@@ -264,6 +264,13 @@
 
                     onMessage(messaging, (payload) => {
                         console.log("Message received: ", payload);
+                        addMessageToUI(payload);
+                    });
+                    onMessage(messaging, (payload) => {
+                        console.log(
+                            "Отримано через Firebase SDK (Foreground):",
+                            payload,
+                        );
                         addMessageToUI(payload);
                     });
                 } catch (error) {
